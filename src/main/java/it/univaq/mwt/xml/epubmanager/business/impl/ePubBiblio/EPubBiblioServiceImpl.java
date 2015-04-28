@@ -148,7 +148,9 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
         String pathToDelete = path + ".epub";
         System.out.println("Il file da eliminare è:" + pathToDelete);
         File fileToDelete = new File(pathToDelete);
-        fileToDelete.delete();
+        if(fileToDelete.exists()){
+            fileToDelete.delete();
+        }
         System.out.println("Il file" + fileToDelete.getName() + " è stato eliminato con successo!");
         String dirFileToDelete = biblio + File.separator + id.toString();
         File dirToDelete = new File(dirFileToDelete);
