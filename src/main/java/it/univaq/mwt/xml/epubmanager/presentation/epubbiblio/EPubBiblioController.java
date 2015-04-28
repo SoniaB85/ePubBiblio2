@@ -6,7 +6,7 @@ import it.univaq.mwt.xml.epubmanager.business.ResponseGrid;
 import it.univaq.mwt.xml.epubmanager.business.impl.ePubBiblio.EPubBiblioServiceImpl;
 import it.univaq.mwt.xml.epubmanager.business.model.ePubBiblio.EPub;
 import it.univaq.mwt.xml.epubmanager.business.model.ePubBiblio.EPubBiblio;
-import it.univaq.mwt.xml.epubmanager.business.model.ePubBiblio.EPubBiblioBuilder;
+import it.univaq.mwt.xml.epubmanager.business.impl.ePubBiblio.EPubBiblioBuilder;
 import it.univaq.mwt.xml.epubmanager.business.model.ePubBiblio.EpubFile;
 import it.univaq.mwt.xml.epubmanager.common.ePubBiblioUtility.FileUtility;
 import it.univaq.mwt.xml.epubmanager.common.ePubBiblioUtility.StatisticUtility;
