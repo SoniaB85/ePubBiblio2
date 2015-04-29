@@ -137,7 +137,7 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         db.setErrorHandler(eh);
-        //uso il DOM per fare le operazioni di rimozione del documento XML
+        //uso il DOM per fare le operazioni di rimozione dei nodi dal documento XML
         String biblioXml = biblio + "EPubBiblio.xml";
         Document doc = db.parse(biblioXml);
 
@@ -156,8 +156,6 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
         File dirToDelete = new File(dirFileToDelete);
         delete(dirToDelete);
 
-        Object epub = x.evaluate("//EPub[@id=" + (id.intValue()) + "]", doc, XPathConstants.NODE);
-
         //Vado a prendermi il valore dell'autore dell'EPub che cancello
         Object aut = x.evaluate("//EPub[@id=" + (id.intValue()) + "]/autore/text()", doc, XPathConstants.STRING);
 
@@ -165,15 +163,15 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
         //Espressione per vedere se il nome del nodo author è uguale al nome dell'autore dell'EPub da eliminare
         String expression = "//lista-statistiche/StatisticheAutori/author[nome=\"" + aut + "\"]";
 
-        NodeList XMeta;
+        NodeList authors;
         try {
             XPathExpression expr = x.compile(expression);
-            XMeta = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-            //prendo tutti i nodi author
+            authors = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+            //prendo tutti i nodi con tag author
             NodeList temp = doc.getElementsByTagName("author");
 
-            Element autore = (Element) XMeta.item(0);
-            String nomeAutore = autore.getElementsByTagName("nome").item(0).getTextContent();
+            Element auth = (Element) authors.item(0);
+            String nomeAutore = auth.getElementsByTagName("nome").item(0).getTextContent();
 
             boolean trovato = false;
             //Se la lunghezza dei nodi è 1 vuol dire che sarà sicuramente il nodo giusto su cui intervenire
@@ -182,7 +180,7 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
                 int numfr = Integer.parseInt(a.getElementsByTagName("frequenza").item(0).getTextContent());
                 numfr--;
                 a.getElementsByTagName("frequenza").item(0).setTextContent(Integer.toString(numfr));
-                    //Se non ci sono altri EPub con quell'autore la frequenza è 0 quindi elimino tutto il nodo
+                //Se non ci sono altri EPub con quell'autore la frequenza è 0 quindi elimino tutto il nodo
                 //Vuol dire anche che non ci sono più ePub nella biblioteca 
                 //Quindi per non avere errori quando carico di nuovo un ePub devo creare un elemento author vuoto                  
                 if (numfr == 0) {
@@ -191,7 +189,7 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
                     nome.setTextContent("");
                     nuovoAut.appendChild(nome);
                     Element frequenza = doc.createElement("frequenza");
-                    frequenza.setTextContent(Integer.toString(1));
+                    frequenza.setTextContent(Integer.toString(0));
                     nuovoAut.appendChild(frequenza);
                     temp.item(0).getParentNode().appendChild(nuovoAut);
                     a.getParentNode().removeChild(a);
@@ -213,7 +211,6 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
                         author.getElementsByTagName("frequenza").item(0).setTextContent(Integer.toString(z));
                         //Se non ci sono altri EPub con quell'autore la frequenza è 0 quindi elimino tutto il nodo
                         if (z == 0) {
-
                             author.getParentNode().removeChild(author);
                             doc.normalize();
                             doc.getDocumentElement().normalize();
@@ -229,7 +226,8 @@ public class EPubBiblioServiceImpl implements EPubBiblioService {
         } catch (Exception ex) {
         }
         /*Fine aggiornamento statistiche*/
-        //Elimino il nodo EPub
+        //Dopo aver aggiornato la frequenza, posso finalmente togliere il nodo dell'Epub
+        Object epub = x.evaluate("//EPub[@id=" + (id.intValue()) + "]", doc, XPathConstants.NODE);
         Element e = (Element) epub;
         System.out.println("Eliminazione del nodo all'interno del file EpubBiblio.xml: " + e.getNodeName());
         e.getParentNode().removeChild(e);
