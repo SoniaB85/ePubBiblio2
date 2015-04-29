@@ -45,31 +45,66 @@ import org.xml.sax.SAXException;
 public class EPubBiblioBuilder {
 
     /**
-     * Questo metodo serve a creare con Stax il documento xml EPubBiblio
-     * @param bib
-     * @param writer
+     * Questo metodo serve a creare la biblioteca di ePub.
+     *
+     * @param nomeBib indica EPubBiblio.xml
+     * @param listaEPub è la lista di EPubFile che devono essere inseriti nella
+     * biblioteca
+     * @param pathB indica pathEPubBiblio ovvero dove salvare la biblioteca
      */
-    public static void buildBiblio(EPubBiblio bib, XMLStreamWriter writer) throws XMLStreamException {
-        /* Utilizzo i metodi XMLStreamWriter nell'ordine corretto per creare il documento*/
-        writer.writeStartDocument("UTF-8", "1.0");
-        writer.writeStartElement("ePubBiblio");
-        writer.writeAttribute("xmlns", "http://it.univaq.mwt.xml/epubmanager");
-        writer.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-        writer.writeAttribute("xsi:schemaLocation", "/EPUBMANAGER/src/main/java/it/univaq/mwt/xml/epunmanager/business/model/ePubBiblio ePubBiblio.xsd");
-        Iterator i = bib.getePubList().iterator();
-        writer.writeStartElement("ePubList");
-        //Inserisco nella biblioteca gli ePub richiamando il metodo creaEPub
-        while (i.hasNext()) {
-            EPub ePub = (EPub) i.next();
-            creaEPub(ePub, writer);
-        }
-        writer.writeEndElement();
-        i = bib.getePubList().iterator();
-        //Inserisco nella biblioteca le statistiche richiamando il metodo creaStatistiche
-        creaStatistiche(bib.getePubList(), writer);
+    public static void creaEPubBiblio(String nomeBib, List<EpubFile> listaEPub, String pathB) {
 
-        writer.writeEndElement();
-        writer.writeEndDocument();
+        EPubBiblio ePubBiblio = StatisticUtility.analizza(listaEPub, pathB);
+        /*Creiamo un documento con Stax*/
+        XMLStreamWriter writer = null;
+        OutputStreamWriter headerBib = null;
+
+        try {
+            FileOutputStream fos = new FileOutputStream(nomeBib);
+            headerBib = new OutputStreamWriter(fos, "UTF-8");
+            //Istanziamo XMLOutputFactory
+            XMLOutputFactory factoryBiblio = XMLOutputFactory.newInstance();
+            //Generiamo un XMLStreamWriter e gli passo lo stream su cui scrivere il documento XML
+            writer = factoryBiblio.createXMLStreamWriter(headerBib);
+
+            /* Utilizzo i metodi XMLStreamWriter nell'ordine corretto per creare il documento*/
+            writer.writeStartDocument("UTF-8", "1.0");
+            writer.writeStartElement("ePubBiblio");
+            writer.writeAttribute("xmlns", "http://it.univaq.mwt.xml/epubmanager");
+            writer.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            writer.writeAttribute("xsi:schemaLocation", "/EPUBManager/src/main/java/it/univaq/mwt/xml/epunmanager/business/model/ePubBiblio ePubBiblio.xsd");
+            Iterator i = ePubBiblio.getePubList().iterator();
+            writer.writeStartElement("ePubList");
+            //Inserisco nella biblioteca gli ePub richiamando il metodo creaEPub
+            while (i.hasNext()) {
+                EPub ePub = (EPub) i.next();
+                creaEPub(ePub, writer);
+            }
+            writer.writeEndElement();
+            i = ePubBiblio.getePubList().iterator();
+            //Inserisco nella biblioteca le statistiche richiamando il metodo creaStatistiche
+            creaStatistiche(ePubBiblio.getePubList(), writer);
+
+            writer.writeEndElement();
+            writer.writeEndDocument();
+
+        } catch (FileNotFoundException e) {
+        } catch (UnsupportedEncodingException | XMLStreamException ex) {
+            Logger.getLogger(EPubBiblio.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            //Chiamo il metodo close per chiudere l'XMLStreamWriter
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+                if (headerBib != null) {
+                    headerBib.close();
+                }
+                System.out.println("La creazione del file XML della biblioteca è avvenuto con successo");
+            } catch (XMLStreamException | IOException e) {
+                System.err.println("Errore:" + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -450,49 +485,6 @@ public class EPubBiblioBuilder {
             posizioneCorretta.appendChild(radice);
         }
 
-    }
-    
-    /**
-     * Questo metodo serve a creare la biblioteca di ePub.
-     * @param nomeBib indica EPubBiblio.xml
-     * @param listaEPub è la lista di EPubFile che devono essere inseriti nella biblioteca
-     * @param pathB indica pathEPubBiblio ovvero dove salvare la biblioteca
-     */
-    public static void creaEPubBiblio(String nomeBib, List<EpubFile> listaEPub, String pathB)  {
-
-        EPubBiblio ePubBiblio = StatisticUtility.analizza(listaEPub, pathB);
-        /*Creiamo un documento con Stax*/
-        XMLStreamWriter writer = null;
-        OutputStreamWriter headerBib = null;
-
-        try {
-            FileOutputStream fos = new FileOutputStream(nomeBib);
-            headerBib = new OutputStreamWriter(fos, "UTF-8");
-            //Istanziamo XMLOutputFactory
-            XMLOutputFactory factoryBiblio = XMLOutputFactory.newInstance();
-            //Generiamo un XMLStreamWriter e gli passo lo stream su cui scrivere il documento XML
-            writer = factoryBiblio.createXMLStreamWriter(headerBib);
-            //Richiamo il metodo per buildare l'ePubBiblio
-            EPubBiblioBuilder.buildBiblio(ePubBiblio, writer);
-            
-        
-        } catch (FileNotFoundException e) {
-        } catch (UnsupportedEncodingException | XMLStreamException ex) {
-            Logger.getLogger(EPubBiblio.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-           //Chiamo il metodo close per chiudere l'XMLStreamWriter
-            try {
-                if (writer != null) {
-                    writer.close();
-                }
-                if (headerBib != null) {
-                    headerBib.close();
-                }
-                System.out.println("La creazione del file XML della biblioteca è avvenuto con successo");
-            } catch (XMLStreamException | IOException e) {
-                System.err.println("Errore:"+ e.getMessage());
-            }
-        }
     }
     
 }
